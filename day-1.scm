@@ -1,32 +1,30 @@
 (define (read-input path)
-    (map (lambda (s)
-           (map string->number
-                (string-split s "   ")))
-         (file->lines path)))
+    (apply map list
+        (map (lambda (s)
+               (map string->number
+                    (string-split s "   ")))
+             (file->lines path))))
 
-(define (part-1 in)
-  (apply +
-    (map (lambda (x)
-           (abs (- (car x)
-                   (cdr x))))
-         (map cons
-              (sort (map car in) <)
-              (sort (map cadr in) <)))))
+(define (part-1 l-side r-side)
+  (apply + 
+    (map (compose abs -)
+         (sort l-side <) 
+         (sort r-side <))))
 
 (define (frequencies lst)
     (foldl (lambda (val acc)
              (hash-update acc val add1 0))
            (hash) lst))
 
-(define (part-2 in)
-    (let* ([l-side (car in)]
-           [r-side (cadr in)]
-           [r-freq (frequencies r-side)])
+(define (part-2 l-side r-side)
+    (let ([r-freq (frequencies r-side)])
       (apply +
         (map (lambda (l-val)
           (* l-val (hash-ref r-freq l-val 0)))
           l-side))))
 
-(define *input* (read-input "./input"))
-(println (part-1 *input*))
-(println (part-2 *input*))
+(let*-values ([(input) (read-input "Downloads/input")]
+              [(l-side r-side)
+               (values (car *input*) (cadr *input*))])
+  (println (part-1 l-side r-side))
+  (println (part-2 l-side r-side)))
