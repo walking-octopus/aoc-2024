@@ -17,11 +17,12 @@
            (hash) lst))
 
 (define (part-2 l-side r-side)
-    (let ([r-freq (frequencies r-side)])
-      (apply +
-        (map (lambda (l-val)
-          (* l-val (hash-ref r-freq l-val 0)))
-          l-side))))
+      (let* ([freqs-r (frequencies r-side)]
+             [r-freq (lambda (x) (hash-ref freqs-r x 0))])
+        (apply +
+          (map (lambda (l-val)
+                 (* l-val (r-freq l-val)))
+               l-side))))
 
 (let*-values ([(input) (read-input "Downloads/input")]
               [(l-side r-side)
