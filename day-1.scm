@@ -26,3 +26,7 @@
         (map (lambda (l-val)
           (* l-val (hash-ref r-freq l-val 0)))
           l-side))))
+
+(define *input* (read-input "./input"))
+(println (part-1 *input*))
+(println (part-2 *input*))
