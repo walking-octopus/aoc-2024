@@ -24,8 +24,8 @@
                  (* l-val (r-freq l-val)))
                l-side))))
 
-(let*-values ([(input) (read-input "Downloads/input")]
-              [(l-side r-side)
-               (values (car *input*) (cadr *input*))])
+(let* ([input (read-input "Downloads/input")]
+       [l-side (car input)]
+       [r-side (cadr input)])
   (println (part-1 l-side r-side))
   (println (part-2 l-side r-side)))
