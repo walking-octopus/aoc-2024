@@ -28,9 +28,10 @@
 
 (define (safe-with-removal? report)
   (define (try-remove i)
-    (and (< i (length report))
-         (or (safe? (remove-at-index i report))
-             (try-remove (+ i 1)))))
+    (cond
+      ((>= i (length report)) #f)
+      ((safe? (remove-at-index i report)) #t)
+      (else (try-remove (+ i 1)))))
   (or (safe? report)
       (try-remove 0)))
 
