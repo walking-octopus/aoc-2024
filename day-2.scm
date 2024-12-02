@@ -19,9 +19,6 @@
            (andmap (λ (n) (<= 1 (abs n) 3))
                    ds))))
 
-(define (part-1 reports)
-  (count safe? reports))
-
 (define (remove-at-index id xs)
     (append (take xs id)
             (drop xs (+ 1 id))))
