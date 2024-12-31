@@ -38,7 +38,7 @@
 (define (probe board pos0 dirs0 seek)
   (define (try pos dirs seek)
     (cond
-      [(empty? (cdr seek))
+      [(empty? cdr seek)
        (list (list pos0 pos))]
       [(eq? (car seek)
             (apply matrix-ref board pos))
