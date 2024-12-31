@@ -22,7 +22,7 @@
               #:when (eq? (matrix-ref board x y) symbol))
              (list x y)))
 
-(define *8-ways*
+(define *8-way*
   '((0 1) (1 1)
     (1 0) (1 -1)
     (0 -1) (-1 -1)
