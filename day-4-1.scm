@@ -22,33 +22,53 @@
               #:when (eq? (matrix-ref board x y) symbol))
              (list x y)))
 
-(define *8-way*
-  '((0 1) (1 1)
-    (1 0) (1 -1)
-    (0 -1) (-1 -1)
-    (-1 0) (-1 1)))
+(define *4-way*
+  '((0 1) (1 0)
+    (0 -1) (-1 0)))
 
-(define (probe board pos0 seek)
-  (define (loop pos dirs seek)
+(define *diagonals*
+  '((1 1)
+    (1 -1)
+    (-1 -1)
+    (-1 1)))
+
+(define *8-way*
+  (append *4-way* *diagonals*))
+
+(define (probe board pos0 dirs0 seek)
+  (define (try pos dirs seek)
     (cond
-      [(empty? seek)
+      [(empty? (cdr seek))
        (list (list pos0 pos))]
-      [(eq? (car seek) (apply matrix-ref board pos))
+      [(eq? (car seek)
+            (apply matrix-ref board pos))
        (apply append
          (map (λ (dir)
-                 (loop (map + dir pos)
-                       (list dir)
-                       (cdr seek)))
+                 (try (map + dir pos)
+                      (list dir)
+                      (cdr seek)))
               dirs))]
       [else '()]))
-  (loop pos0 *8-way* seek))
+  (try pos0 dirs0 seek))
 
 (define (count-xmas crossword)
   (length
     (apply append (map
-      (λ (pos) (or (probe crossword pos '(#\X #\M #\A #\S))
-                   (probe crossword pos '(#\S #\A #\M #\X))))
-      (append (matrix-find crossword #\X)
-              (matrix-find crossword #\S))))))
+      (λ (pos) (probe crossword pos *8-way* '(#\X #\M #\A #\S)))
+      (matrix-find crossword #\X)))))
 
-(printf "Part ~a ~a" 1 (count-xmas (read-input "Downloads/input")))
+(define (midpoint a b)
+  (match (list a b)
+    [(list (list ax ay) (list bx by))
+     (list (/ (+ ax bx) 2) (/ (+ ay by) 2))]))
+
+;; FIXME: WIP
+(define (count-x-mas crossword)
+  (length
+    (remove-duplicates (map (curry apply midpoint)
+      (apply append (map
+        (λ (pos) (probe crossword pos *diagonals* '(#\M #\A #\S)))
+        (matrix-find crossword #\M)))))))
+
+(printf "Part ~a ~a~n" 1 (count-xmas  (read-input "Downloads/input")))
+(printf "Part ~a ~a~n" 2 (count-x-mas (read-input "Downloads/input")))
