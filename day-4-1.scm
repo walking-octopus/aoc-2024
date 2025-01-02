@@ -1,4 +1,4 @@
-(define (read-input path)
+(define (read-puzzle-input path)
   (define (string->vector str)
     (list->vector (string->list str)))
   (call-with-input-file path
@@ -27,48 +27,58 @@
     (0 -1) (-1 0)))
 
 (define *diagonals*
-  '((1 1)
-    (1 -1)
-    (-1 -1)
-    (-1 1)))
+  '((1 1) (1 -1)
+    (-1 -1) (-1 1)))
 
 (define *8-way*
   (append *4-way* *diagonals*))
 
+(define (flatten-once xs)
+  (apply append xs))
+
 (define (probe board pos0 dirs0 seek)
   (define (try pos dirs seek)
     (cond
-      [(empty? cdr seek)
+      [(empty? seek)
        (list (list pos0 pos))]
       [(eq? (car seek)
             (apply matrix-ref board pos))
-       (apply append
+       (flatten-once
          (map (λ (dir)
-                 (try (map + dir pos)
-                      (list dir)
-                      (cdr seek)))
-              dirs))]
+           (try (if (empty? (cdr seek)) pos (map + dir pos))
+                (list dir)
+                (cdr seek)))
+           dirs))]
       [else '()]))
   (try pos0 dirs0 seek))
 
-(define (count-xmas crossword)
+(define (count-xmas board)
   (length
-    (apply append (map
-      (λ (pos) (probe crossword pos *8-way* '(#\X #\M #\A #\S)))
-      (matrix-find crossword #\X)))))
+    (flatten-once
+      (map (λ (pos) (probe board pos
+                           *8-way*
+                           '(#\X #\M #\A #\S)))
+           (matrix-find board #\X)))))
 
 (define (midpoint a b)
   (match (list a b)
     [(list (list ax ay) (list bx by))
-     (list (/ (+ ax bx) 2) (/ (+ ay by) 2))]))
+     (list (/ (+ ax bx) 2)
+           (/ (+ ay by) 2))]))
 
-;; FIXME: WIP
-(define (count-x-mas crossword)
-  (length
-    (remove-duplicates (map (curry apply midpoint)
-      (apply append (map
-        (λ (pos) (probe crossword pos *diagonals* '(#\M #\A #\S)))
-        (matrix-find crossword #\M)))))))
+(define (cross-product v1 v2)
+  (- (* (first v1)  (second v2))
+     (* (second v1) (first v2))))
 
-(printf "Part ~a ~a~n" 1 (count-xmas  (read-input "Downloads/input")))
-(printf "Part ~a ~a~n" 2 (count-x-mas (read-input "Downloads/input")))
+;; WIP
+(define (count-x-mas board)
+  (length (remove-duplicates (map (curry apply midpoint)
+          (flatten-once (map
+            (λ (pos) (probe board pos
+                            *diagonals*
+                            '(#\M #\A #\S)))
+            (matrix-find board #\M)))))))
+
+(let [(puzzle (read-puzzle-input "Downloads/input"))]
+     (printf "Part 1 ~a~n" (count-xmas  puzzle))
+     (printf "Part 2 ~a~n" (count-x-mas puzzle)))
