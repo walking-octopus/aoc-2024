@@ -1,20 +1,15 @@
 (define (read-puzzle-input path)
-  (define (string->vector str)
-    (list->vector (string->list str)))
   (call-with-input-file path
-    (λ (in)
-       (let loop [(lines empty)]
-         (let [(line (read-line in 'any))]
-           (if (eof-object? line)
-               (list->vector (reverse lines))
-               (loop (cons (string->vector line) lines))))))))
+    (λ (port)
+      (for/vector ([line (in-lines port)])
+        (for/vector ([c (in-string line)]) c)))))
 
 (define (matrix-ref board x y)
-    (and (>= x 0)
-         (>= y 0)
-         (< y (vector-length board))
-         (< x (vector-length (vector-ref board y)))
-         (vector-ref (vector-ref board y) x)))
+  (and (>= x 0)
+       (>= y 0)
+       (< y (vector-length board))
+       (< x (vector-length (vector-ref board y)))
+       (vector-ref (vector-ref board y) x)))
 
 (define (matrix-find board symbol)
   (for*/list ([y (in-range (vector-length board))]
@@ -45,20 +40,24 @@
             (apply matrix-ref board pos))
        (flatten-once
          (map (λ (dir)
-           (try (if (empty? (cdr seek)) pos (map + dir pos))
+           (try (if (empty? (cdr seek))
+                    pos
+                    (map + dir pos))
                 (list dir)
                 (cdr seek)))
            dirs))]
       [else '()]))
   (try pos0 dirs0 seek))
 
+(define (search-word word dirs board)
+  (flatten-once
+    (map (λ (pos) (probe board pos dirs word))
+         (matrix-find board (car word)))))
+
 (define (count-xmas board)
   (length
-    (flatten-once
-      (map (λ (pos) (probe board pos
-                           *8-way*
-                           '(#\X #\M #\A #\S)))
-           (matrix-find board #\X)))))
+    (search-word '(#\X #\M #\A #\S)
+                 *8-way* board)))
 
 (define (midpoint a b)
   (match (list a b)
@@ -66,18 +65,20 @@
      (list (/ (+ ax bx) 2)
            (/ (+ ay by) 2))]))
 
-(define (cross-product v1 v2)
-  (- (* (first v1)  (second v2))
-     (* (second v1) (first v2))))
+(define (build-hash xs f)
+  (foldl (λ (x h) (let*
+           [(key (f x))
+            (vals (hash-ref h key '()))]
+            (hash-set h key (cons x vals))))
+         (make-immutable-hash) xs))
 
-;; WIP
 (define (count-x-mas board)
-  (length (remove-duplicates (map (curry apply midpoint)
-          (flatten-once (map
-            (λ (pos) (probe board pos
-                            *diagonals*
-                            '(#\M #\A #\S)))
-            (matrix-find board #\M)))))))
+  (apply + (hash-map
+    (build-hash
+      (search-word '(#\M #\A #\S)
+                   *diagonals* board)
+      (curry apply midpoint))
+    (λ (k v) (quotient (length v) 2)))))
 
 (let [(puzzle (read-puzzle-input "Downloads/input"))]
      (printf "Part 1 ~a~n" (count-xmas  puzzle))
